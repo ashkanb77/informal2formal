@@ -159,10 +159,3 @@ for epoch in range(args.epochs):
         best_loss = val_loss
 
 print(f"Best Loss is {best_loss:0.4f}")
-
-plt.figure(figsize=(12, 7))
-plt.plot(losses, label='train loss')
-plt.plot(val_losses, label='validation loss')
-plt.title('loss')
-plt.legend(loc='best')
-plt.show()
