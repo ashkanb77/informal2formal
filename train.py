@@ -37,7 +37,7 @@ parser.add_argument('--model_name', type=str, default='erfan226/persian-t5-parap
 
 args = parser.parse_args()
 
-dic, train_df, val_df = read_dataset(args.train_informal, args.val_informal, args.dict, args.min_count)
+dic, train_df, val_df = read_dataset(args.train_informal, args.dict, args.min_count)
 
 tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 
