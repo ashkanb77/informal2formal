@@ -11,17 +11,20 @@ from torch import nn
 from transformers import get_linear_schedule_with_warmup
 import numpy as np
 import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
+import time
 
 
 parser = ArgumentParser()
 
-parser.add_argument('--epochs', type=int, default=10, help='number of epochs for training')
-parser.add_argument('--batch_size', type=int, default=2, help='batch size')
+parser.add_argument('--epochs', type=int, default=100, help='number of epochs for training')
+parser.add_argument('--batch_size', type=int, default=32, help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--dict', type=str, default='dataset/dict.csv', help='dictionary path')
 parser.add_argument('--tokenizer', type=str, default='erfan226/persian-t5-paraphraser', help='tokenizer')
 parser.add_argument('--min_count', type=int, default=10, help='min count')
-parser.add_argument('--append_formals', type=bool, default=True, help='append formal forms to end of informal sentence')
+parser.add_argument('--append_formals', type=bool, default=False,
+                    help='append formal forms to end of informal sentence')
 parser.add_argument(
     '--train_informal', type=str,
     default='dataset/train_informal.csv', help='train formal and informal sentences'
@@ -30,12 +33,12 @@ parser.add_argument(
     '--val_informal', type=str,
     default='dataset/val_informal.csv', help='test formal and informal sentences'
 )
-parser.add_argument('--experiment', type=str, default='experiment1', help='experiment path')
-
-
 parser.add_argument('--model_name', type=str, default='erfan226/persian-t5-paraphraser', help='dataset directory')
 
 args = parser.parse_args()
+
+experiment = str(int(time.time()))
+writer = SummaryWriter('runs/' + experiment)
 
 dic, train_df, val_df = read_dataset(args.train_informal, args.dict, args.min_count)
 
@@ -44,8 +47,10 @@ tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 train_dataset = FormalDataset(dic, train_df, args.append_formals)
 val_dataset = FormalDataset(dic, val_df, args.append_formals)
 
-train_dataloader = DataLoader(train_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=args.batch_size)
-val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=args.batch_size)
+train_dataloader = DataLoader(train_dataset, collate_fn=lambda data: collate_fn(data, tokenizer),
+                              batch_size=args.batch_size)
+val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data, tokenizer),
+                            batch_size=args.batch_size)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -55,7 +60,9 @@ model.to(device)
 a = train_dataset[0]
 print('formal ' + a[0])
 print('informal ' + a[1])
+print()
 print(f"You are using {device}")
+print()
 
 # training config: optimizer, scheduler and criterion
 optimizer = AdamW(model.parameters(), lr=args.learning_rate)
@@ -69,7 +76,6 @@ scheduler = get_linear_schedule_with_warmup(
 
 
 def train_epoch(model, dataloader, optimizer, scheduler, epoch):
-
     losses = []
     model.train()
 
@@ -92,11 +98,12 @@ def train_epoch(model, dataloader, optimizer, scheduler, epoch):
 
             tepoch.set_postfix(loss=loss.item())
 
-    return np.mean(losses)
+    loss = np.mean(losses)
+    writer.add_scalar('Loss/train', loss, epoch)
+    return loss
 
 
 def eval_model(model, dataloader, epoch):
-
     losses = []
     model.eval()
 
@@ -113,7 +120,9 @@ def eval_model(model, dataloader, epoch):
                 losses.append(loss.item())
                 tepoch.set_postfix(loss=loss.item())
 
-        return np.mean(losses)
+        loss = np.mean(losses)
+        writer.add_scalar('Loss/validation', loss, epoch)
+        return loss
 
 
 losses = []
@@ -137,19 +146,21 @@ for epoch in range(args.epochs):
     val_loss = eval_model(
         model, val_dataloader, epoch
     )
-    print()
+
     print(f'Validation loss {val_loss:0.4f}')
+    print()
 
     # save history
     losses.append(train_loss)
     val_losses.append(val_loss)
 
-    if val_loss < best_loss: # save model if its accuracy is bigger than best model accuracy
-        torch.save(model.state_dict(), 'model.pth')
+    if val_loss < best_loss:  # save model if its accuracy is bigger than best model accuracy
+        torch.save(model.state_dict(), experiment + '.pth')
         best_loss = val_loss
 
 print(f"Best Loss is {best_loss:0.4f}")
 
+plt.figure(figsize=(12, 7))
 plt.plot(losses, label='train loss')
 plt.plot(val_losses, label='validation loss')
 plt.title('loss')
