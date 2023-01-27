@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 parser = ArgumentParser()
 
 parser.add_argument('--epochs', type=int, default=10, help='number of epochs for training')
-parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+parser.add_argument('--batch_size', type=int, default=2, help='batch size')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--dict', type=str, default='dataset/dict.csv', help='dictionary path')
 parser.add_argument('--tokenizer', type=str, default='erfan226/persian-t5-paraphraser', help='tokenizer')
@@ -44,14 +44,17 @@ tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 train_dataset = FormalDataset(dic, train_df, args.append_formals)
 val_dataset = FormalDataset(dic, val_df, args.append_formals)
 
-train_dataloader = DataLoader(train_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=2)
-val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=3)
+train_dataloader = DataLoader(train_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=args.batch_size)
+val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data, tokenizer), batch_size=args.batch_size)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = FormalModule(args.model_name)
 model.to(device)
 
+a = train_dataset[0]
+print('formal ' + a[0])
+print('informal ' + a[1])
 print(f"You are using {device}")
 
 # training config: optimizer, scheduler and criterion

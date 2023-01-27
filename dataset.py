@@ -8,11 +8,12 @@ class FormalDataset(Dataset):
         self.df = df
         if append_formals:
             self.df['inFormalForm'] = find_formal_forms(df['inFormalForm'], dic)
+        self.df = self.df.values
 
     def __getitem__(self, item):
+        row = self.df[item]
         return (
-            self.df.FormalForm[item],
-            self.df.inFormalForm[item]
+            row[1], row[0]
         )
 
     def __len__(self):

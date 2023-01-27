@@ -3,9 +3,10 @@ from sklearn.model_selection import train_test_split
 
 
 def read_dataset(train_informal_path, dict_path, min_count):
-
     train_df = pd.read_csv(train_informal_path)
-    train_df = train_df[['inFormalForm', 'formalForm']]
+    train_df.rename(columns={"formalForm": "FormalForm"}, inplace=True)
+    train_df = train_df[['inFormalForm', 'FormalForm']]
+
     train_df.dropna(inplace=True)
 
     train_df, val_df = train_test_split(train_df, test_size=0.1)
@@ -52,7 +53,6 @@ def find_formal_forms(sentences, dic):
 
 
 def collate_fn(data, tokenizer):
-
     formal, informal = zip(*data)
     formal = list(formal)
     informal = list(informal)
