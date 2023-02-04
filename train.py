@@ -168,6 +168,8 @@ for epoch in range(args.epochs):
 
     if val_loss < best_loss:  # save model if its accuracy is bigger than best model accuracy
         torch.save(model.state_dict(), os.path.join(dir, 'model.pth'))
+        torch.save(optimizer.state_dict(), os.path.join(dir, 'optimizer.pth'))
+        torch.save(scheduler.state_dict(), os.path.join(dir, 'scheduler.pth'))
         best_loss = val_loss
 
 torch.save(optimizer.state_dict(), os.path.join(dir, 'optimizer.pth'))
