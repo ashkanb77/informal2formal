@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 import time
+import os
 
 
 parser = ArgumentParser()
@@ -34,6 +35,8 @@ parser.add_argument(
     default='dataset/val_informal.csv', help='test formal and informal sentences'
 )
 parser.add_argument('--model_name', type=str, default='erfan226/persian-t5-paraphraser', help='dataset directory')
+parser.add_argument('--checkpoint_dir', type=str, default='checkpoint', help='dataset directory')
+parser.add_argument('--resume_training_dir', type=str, default='-1', help='dataset directory')
 
 args = parser.parse_args()
 
@@ -130,6 +133,15 @@ val_losses = []
 
 best_loss = 100
 
+dir = os.path.join(args.checkpoint_dir, experiment)
+os.makedirs(dir, exist_ok=True)
+
+
+if args.resume_training_dir != '-1':
+    model.load_state_dict(torch.load(os.path.join(args.resume_training_dir, 'model.pth')))
+    optimizer.load_state_dict(torch.load(os.path.join(args.resume_training_dir, 'optimizer.pth')))
+    scheduler.load_state_dict(torch.load(os.path.join(args.resume_training_dir, 'scheduler.pth')))
+
 for epoch in range(args.epochs):
 
     # train one epoch
@@ -155,7 +167,10 @@ for epoch in range(args.epochs):
     val_losses.append(val_loss)
 
     if val_loss < best_loss:  # save model if its accuracy is bigger than best model accuracy
-        torch.save(model.state_dict(), experiment + '.pth')
+        torch.save(model.state_dict(), os.path.join(dir, 'model.pth'))
         best_loss = val_loss
+
+torch.save(optimizer.state_dict(), os.path.join(dir, 'optimizer.pth'))
+torch.save(scheduler.state_dict(), os.path.join(dir, 'scheduler.pth'))
 
 print(f"Best Loss is {best_loss:0.4f}")
