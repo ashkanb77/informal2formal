@@ -15,7 +15,7 @@ parser = ArgumentParser()
 parser.add_argument('--tokenizer', type=str, default='erfan226/persian-t5-paraphraser', help='tokenizer')
 parser.add_argument('--batch_size', type=int, default=16, help='batch size')
 parser.add_argument('--model', type=str, default='erfan226/persian-t5-paraphraser', help='model')
-parser.add_argument('--model_checkpoint', type=str, default='model.pth', help='dataset directory')
+parser.add_argument('--model_checkpoint', type=str, default='model.pth', help='checkpoint directory')
 parser.add_argument('--dict_path', type=str, default='dataset/dict.csv', help='dictionary path')
 parser.add_argument('--min_count', type=int, default=10, help='min count ')
 parser.add_argument('--validation_path', type=str, default='val_informals.csv')
@@ -56,11 +56,6 @@ def convert_compute(input_ids, attention_mask, labels):
     scores = {k: v / len(rouge_output) for k, v in scores.items()}
 
     return input_str, pred_str, label_str, scores
-    # return {['rouge2'].mid
-    #     "rouge2_precision": round(rouge_output.precision, 4),
-    #     "rouge2_recall": round(rouge_output.recall, 4),
-    #     "rouge2_fmeasure": round(rouge_output.fmeasure, 4),
-    # }
 
 
 dic, val_df = read_dataset(args.validation_path, args.dict_path, args.min_count, split=False)
