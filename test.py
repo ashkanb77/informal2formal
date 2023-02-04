@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 from model import FormalModule
 from transformers import AutoTokenizer
 from utils import find_formal_forms, read_dataset
-from datasets import load_metric
 from dataset import FormalDataset
 from torch.utils.data import DataLoader
 from utils import collate_fn
@@ -29,7 +28,7 @@ tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = FormalModule(args.model)
-model.load_state_dict(torch.load(args.model_checkpoint))
+model.load_state_dict(torch.load(args.model_checkpoint, map_location=device))
 model.to(device)
 
 rouge = Rouge()
@@ -38,7 +37,7 @@ rouge = Rouge()
 def convert_compute(input_ids, attention_mask, labels):
     generated_ids = model.t5_model.generate(
         input_ids=input_ids,
-        attention_mask=attention_mask, max_new_tokens='longest'
+        attention_mask=attention_mask, max_new_tokens=150
     )
 
     pred_str = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
