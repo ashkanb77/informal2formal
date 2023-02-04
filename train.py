@@ -41,7 +41,9 @@ parser.add_argument('--resume_training_dir', type=str, default='-1', help='datas
 args = parser.parse_args()
 
 experiment = str(int(time.time()))
-writer = SummaryWriter('runs/' + experiment)
+dir = os.path.join(args.checkpoint_dir, experiment)
+os.makedirs(dir, exist_ok=True)
+writer = SummaryWriter(os.path.join(dir, 'runs'))
 
 dic, train_df, val_df = read_dataset(args.train_informal, args.dict, args.min_count)
 
@@ -61,6 +63,7 @@ model = FormalModule(args.model_name)
 model.to(device)
 
 a = train_dataset[0]
+print()
 print('formal ' + a[0])
 print('informal ' + a[1])
 print()
@@ -132,9 +135,6 @@ losses = []
 val_losses = []
 
 best_loss = 100
-
-dir = os.path.join(args.checkpoint_dir, experiment)
-os.makedirs(dir, exist_ok=True)
 
 
 if args.resume_training_dir != '-1':
