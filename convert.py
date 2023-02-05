@@ -7,8 +7,8 @@ from transformers import AutoTokenizer
 
 parser = ArgumentParser()
 
-parser.add_argument('--tokenizer', type=str, default='m3hrdadfi/bert2bert-fa-wiki-summary', help='tokenizer')
-parser.add_argument('--model', type=str, default='m3hrdadfi/bert2bert-fa-wiki-summary', help='model')
+parser.add_argument('--tokenizer', type=str, default='erfan226/persian-t5-paraphraser', help='tokenizer')
+parser.add_argument('--model', type=str, default='erfan226/persian-t5-paraphraser', help='model')
 parser.add_argument('--model_checkpoint', type=str, default='model.pth', help='dataset directory')
 parser.add_argument('--informal_texts', type=str, default='informal_texts.txt')
 
@@ -51,4 +51,3 @@ with open(args.informal_texts, 'r') as file:
 
 for r in formals:
     print(r)
-    
