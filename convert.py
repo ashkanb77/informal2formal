@@ -4,7 +4,6 @@ from model import FormalModule
 from transformers import AutoTokenizer
 
 
-
 parser = ArgumentParser()
 
 parser.add_argument('--tokenizer', type=str, default='erfan226/persian-t5-paraphraser', help='tokenizer')

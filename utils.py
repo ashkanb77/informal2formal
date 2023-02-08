@@ -11,7 +11,7 @@ def read_dataset(train_informal_path, dict_path, min_count, split=True):
     dictionary = read_dict(dict_path, min_count)
 
     if split:
-        train_df, val_df = train_test_split(df, test_size=0.1)
+        train_df, val_df = train_test_split(df, test_size=0.1, random_state=42)
         return dictionary, train_df, val_df
 
     return dictionary, df

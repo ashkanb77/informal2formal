@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from utils import collate_fn
 import pandas as pd
 from rouge import Rouge
+from nltk.translate.bleu_score import sentence_bleu
 from tqdm import tqdm
 
 parser = ArgumentParser()
@@ -45,7 +46,19 @@ def convert_compute(input_ids, attention_mask, labels):
     labels[labels == -100] = tokenizer.pad_token_id
     label_str = tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-    scores = {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0}
+    scores = {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0, 'BLEU-1': 0, 'BLEU-2': 0}
+
+    for i in range(len(pred_str)):
+        reference = [
+            label_str[i].split()
+        ]
+        candidate = pred_str[i].split()
+
+        scores['BLEU-1'] += sentence_bleu(reference, candidate, weights=(1, 0))
+        scores['BLEU-2'] += sentence_bleu(reference, candidate, weights=(0, 1))
+
+    scores['BLEU-1'] = scores['BLEU-1'] / (i + 1)
+    scores['BLEU-2'] = scores['BLEU-2'] / (i + 1)
 
     rouge_output = rouge.get_scores(pred_str, label_str)
     for row in rouge_output:
@@ -53,7 +66,9 @@ def convert_compute(input_ids, attention_mask, labels):
         scores['rouge-2'] += row['rouge-2']['f']
         scores['rouge-l'] += row['rouge-l']['f']
 
-    scores = {k: v / len(rouge_output) for k, v in scores.items()}
+    scores['rouge-1'] = scores['rouge-1'] / len(rouge_output)
+    scores['rouge-2'] = scores['rouge-2'] / len(rouge_output)
+    scores['rouge-l'] = scores['rouge-l'] / len(rouge_output)
 
     return input_str, pred_str, label_str, scores
 
@@ -65,7 +80,7 @@ val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data
                             batch_size=args.batch_size)
 
 d = {'informals': [], 'prediction_formals': [], 'ground_truth_formals': []}
-scores = {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0}
+scores = {'rouge-1': 0, 'rouge-2': 0, 'rouge-l': 0, 'BLEU-1': 0, 'BLEU-2': 0}
 i = 0
 with tqdm(val_dataloader, unit="batch") as tepoch:
     for batch in tepoch:
@@ -86,4 +101,4 @@ with tqdm(val_dataloader, unit="batch") as tepoch:
 scores = {k: v / i for k, v in scores.items()}
 print(scores)
 df = pd.DataFrame(d)
-df.to_csv('validation_path.csv')
+df.to_csv('validation.csv')
