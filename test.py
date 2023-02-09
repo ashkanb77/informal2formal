@@ -73,7 +73,7 @@ def convert_compute(input_ids, attention_mask, labels):
     return input_str, pred_str, label_str, scores
 
 
-dic, val_df = read_dataset(args.validation_path, args.dict_path, args.min_count, split=False)
+dic, train_df, val_df = read_dataset(args.validation_path, args.dict_path, args.min_count)
 
 val_dataset = FormalDataset(dic, val_df, args.append_formals)
 val_dataloader = DataLoader(val_dataset, collate_fn=lambda data: collate_fn(data, tokenizer),
